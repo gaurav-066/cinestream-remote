@@ -716,6 +716,23 @@ document.addEventListener('keydown', e => {
 let firebaseDb = null;
 let currentCastMode = null; // 'remote' or 'tv'
 let currentRoomCode = null;
+let lastCommandId = null;
+
+async function initFirebase() {
+  if (firebaseDb) return true;
+  if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) {
+    updateCastStatus("Firebase config missing!", true);
+    return false;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+    firebaseDb = firebase.database();
+    return true;
+  } catch(e) {
+    updateCastStatus("Failed to init Firebase", true);
+    return false;
+  }
+}
 
 function openCastModal() {
   document.getElementById('cast-overlay').classList.add('open');
@@ -738,24 +755,116 @@ function updateCastStatus(msg, isError=false) {
   el.style.display = 'block';
 }
 
-function connectAsRemote() {
+async function connectAsRemote() {
   const code = document.getElementById('room-code-input').value.trim().toUpperCase();
   if (!code) { updateCastStatus("Please enter a room code", true); return; }
+  
+  updateCastStatus("Connecting to Firebase...");
+  const ok = await initFirebase();
+  if (!ok) return;
+
   currentRoomCode = code;
   currentCastMode = 'remote';
+  
+  // Write a presence ping
+  firebaseDb.ref(`rooms/${code}/presence/remote`).set({ connected: true, at: Date.now() });
+
   updateCastStatus(`Connected as Remote to room: ${code}`);
   showToast(`Linked to TV (${code})!`);
   setTimeout(closeCastModal, 1500);
 }
 
-function connectAsTV() {
+async function connectAsTV() {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   document.getElementById('room-code-input').value = code;
+  
+  updateCastStatus("Connecting to Firebase...");
+  const ok = await initFirebase();
+  if (!ok) return;
+
   currentRoomCode = code;
   currentCastMode = 'tv';
+  
+  // Listen for commands
+  firebaseDb.ref(`rooms/${code}/command`).on('value', (snap) => {
+    const cmd = snap.val();
+    if (!cmd || !cmd.action) return;
+    if (cmd.id === lastCommandId) return;
+    lastCommandId = cmd.id;
+    
+    if (cmd.action === 'play' && cmd.media) {
+      showToast(`Received cast: ${cmd.media.title}`);
+      
+      // Manually open the player with the received data
+      document.getElementById('player-title').textContent = cmd.media.title;
+      document.getElementById('player-ep-info').textContent = cmd.media.epInfo || '';
+      
+      currentSource = cmd.media.source || 'videasy';
+      document.getElementById('src-videasy').classList.toggle('active', currentSource === 'videasy');
+      document.getElementById('src-vidking').classList.toggle('active', currentSource === 'vidking');
+      
+      document.getElementById('player-iframe').src = cmd.media.url;
+      
+      window._playState = cmd.media.state || null;
+      
+      const tvCtrl = document.getElementById('player-tv-controls');
+      tvCtrl.style.display = 'none'; // hide controls on TV to keep it clean
+      
+      document.getElementById('player-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+  });
+
   updateCastStatus(`This screen is now TV. Room Code: ${code}`);
   showToast("Ready to receive casts!");
 }
+
+async function sendCastCommand(media) {
+  if (!firebaseDb || !currentRoomCode) return false;
+  
+  const cmd = {
+    action: "play",
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    sentAt: Date.now(),
+    media: media
+  };
+  
+  await firebaseDb.ref(`rooms/${currentRoomCode}/command`).set(cmd);
+  showToast("Casted to TV!");
+  return true;
+}
+
+// ── OVERRIDE PLAY ITEM TO INTERCEPT CASTS ─────────────────────────────────
+const originalPlayItem = playItem;
+playItem = async function(id, type, season, episode) {
+  // If we are connected as a remote, we cast instead of playing locally!
+  if (currentCastMode === 'remote' && currentRoomCode) {
+    const item = getCached(type, id);
+    const title = item ? item.title : 'Playing…';
+    
+    season = season || currentSeason || 1;
+    episode = episode || currentEpisode || 1;
+    
+    let epInfo = '';
+    if (type === 'tv' || (type === 'anime' && !item?.isMovie)) {
+      epInfo = `Season ${season}, Episode ${episode}`;
+    }
+    
+    const url = getPlayerURL(id, type, 'videasy', season, episode);
+    
+    await sendCastCommand({
+      title: title,
+      epInfo: epInfo,
+      url: url,
+      source: 'videasy',
+      state: { id, type, season, episode }
+    });
+    return; // Stop here, don't open local player!
+  }
+  
+  // Otherwise, play normally on this device
+  originalPlayItem(id, type, season, episode);
+};
 
 // ── START ─────────────────────────────────────────────────────────────────
 init();
