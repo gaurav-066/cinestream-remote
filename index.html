@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineStream — Watch Free Movies & TV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loader-logo">Cine<span>Stream</span></div>
+    <div class="loader-bar">
+      <div class="loader-fill" id="loader-fill"></div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav id="nav">
+    <div class="nav-logo">Cine<span>Stream</span></div>
+    <div class="nav-links">
+      <a href="#" class="active" onclick="showSection('home');return false">Home</a>
+      <a href="#" onclick="openSearch();return false">Movies</a>
+      <a href="#" onclick="openSearch();return false">TV Shows</a>
+      <a href="#" onclick="showSection('anime');return false" style="color:#c084fc">Anime</a>
+    </div>
+    <div class="nav-spacer"></div>
+    <button class="nav-search-btn" onclick="openCastModal()" aria-label="Link TV" style="margin-right: 8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+        <polyline points="17 2 12 7 7 2"></polyline>
+      </svg>
+    </button>
+    <button class="nav-search-btn" onclick="openSearch()" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Search Overlay -->
+  <div id="search-overlay">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search movies, TV shows…" autocomplete="off">
+      <button class="search-close" onclick="closeSearch()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-content" id="hero-content">
+      <!-- filled by JS -->
+    </div>
+    <div class="hero-dots" id="hero-dots"></div>
+  </section>
+
+  <!-- Content Rows -->
+  <main id="content"></main>
+
+  <!-- Footer -->
+  <footer>
+    <div>
+      <div class="footer-logo">Cine<span>Stream</span></div>
+    </div>
+    <div class="footer-note">
+      CineStream is a free streaming aggregator. All content is streamed via third-party embed providers. We do not host
+      or store any media files.
+    </div>
+  </footer>
+
+  <!-- Detail Modal -->
+  <div id="modal-overlay" onclick="handleModalOverlayClick(event)">
+    <div class="modal" id="modal">
+      <button class="modal-close" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div id="modal-inner"></div>
+    </div>
+  </div>
+
+  <!-- Player Modal -->
+  <div id="player-overlay">
+    <div class="player-topbar">
+      <div>
+        <div class="player-title" id="player-title"></div>
+        <div class="player-ep-info" id="player-ep-info"></div>
+      </div>
+      <button class="player-close" onclick="closePlayer()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    <div class="player-frame-wrap">
+      <iframe id="player-iframe" allowfullscreen
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"></iframe>
+    </div>
+    <div class="player-source-bar" id="player-source-bar">
+      <span class="player-source-label">Source:</span>
+      <button class="source-btn active" id="src-videasy" onclick="switchSource('videasy')">Source 1</button>
+      <button class="source-btn" id="src-vidking" onclick="switchSource('vidking')">Source 2</button>
+    </div>
+    <div class="player-tv-controls" id="player-tv-controls" style="display:none"></div>
+  </div>
+
+  <!-- Cast Modal -->
+  <div id="cast-overlay" onclick="handleCastOverlayClick(event)">
+    <div class="modal" id="cast-modal" style="max-width: 400px; padding-bottom: 0;">
+      <button class="modal-close" onclick="closeCastModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div class="modal-body" style="padding-top: 40px; text-align: center;">
+        <h2 style="margin-bottom: 10px; color: var(--white);">Link to TV</h2>
+        <p style="color: var(--text-dim); margin-bottom: 24px; font-size: 13px;">Generate a code to use this screen as a TV, or enter a code to use this device as a remote.</p>
+        
+        <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid var(--border);">
+          <label style="display:block; text-align:left; font-size: 11px; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; letter-spacing: 1px;">ROOM CODE</label>
+          <div style="display:flex; gap: 10px;">
+            <input type="text" id="room-code-input" placeholder="e.g. ABCDE1" maxlength="12" style="flex:1; background: var(--bg3); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; outline: none; font-size: 16px; text-transform: uppercase; text-align: center; font-weight: 700; letter-spacing: 2px;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-direction: column;">
+          <button class="modal-play" onclick="connectAsRemote()" style="width: 100%; justify-content: center; background: var(--accent);">
+            Connect as Remote
+          </button>
+          <button class="btn-info" onclick="connectAsTV()" style="width: 100%; justify-content: center; margin-bottom: 10px;">
+            Generate TV Code
+          </button>
+        </div>
+
+        <div id="cast-status" style="margin-top: 15px; font-size: 13px; color: #22c55e; font-weight: 600; display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
