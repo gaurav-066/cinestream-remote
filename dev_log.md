@@ -32,8 +32,8 @@
 **What was built:**
 - **Enhanced Responsive Design**:
     - Overlap Fix: Removed `overflow: hidden` from Hero to prevent clipping and adjusted `min-height` on mobile (50vh-70vh).
-    - Layout Strategy: Shifted from flexbox-centering to standard block layout with padding for the Hero section on mobile. Removed JS `display: flex` override to allow CSS to control the layout.
-    - Content Robustness: Added explicit `z-index`, `background`, and `margin-top` to the `#content` section on mobile to ensure it never overlaps with the Hero.
+    - Layout Strategy: Switched to aggressive block layout on mobile using `!important` to force height and display properties. Removed negative margins on the row scroller to prevent pull-up overlaps.
+    - Content Robustness: Added explicit `z-index`, `background`, and `margin-top` to the `#content` section on mobile.
     - Title Scaling: Implemented `clamp()` and media query overrides for the Hero title to ensure it fits on phone screens.
     - Spacing: Reduced row margins on mobile and improved `hero-content` padding.
     - Button Layout: Buttons now stack and fill width on mobile (`flex: 1`) for better touch targets.
