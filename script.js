@@ -95,8 +95,9 @@ function setLoaderProgress(p) {
 
 // ── Image helpers ───────────────────────────────────────────────────────────
 function cardImgHTML(item) {
-  if (item.poster) {
-    return `<img src="${item.poster}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentNode.innerHTML=noImgHTML('${escHtml(item.title)}')" >`;
+  const src = item.backdrop || item.poster;
+  if (src) {
+    return `<img src="${src}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentNode.innerHTML=noImgHTML('${escHtml(item.title)}')" >`;
   }
   return noImgHTML(item.title);
 }
@@ -708,7 +709,7 @@ async function doSearch(q) {
   filtered.forEach(cacheItem);
   results.innerHTML = filtered.map(item => `
     <div class="card" onclick="closeSearch();openModal(${item.id},'${item.type}')" style="width:100%">
-      <div class="card-img-wrap" style="height:200px">
+      <div class="card-img-wrap" style="aspect-ratio:16/9;height:auto">
         ${cardImgHTML(item)}
         <div class="card-overlay">
           <div class="card-play-btn">
