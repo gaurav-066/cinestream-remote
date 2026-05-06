@@ -810,6 +810,9 @@ async function connectAsRemote() {
 
   updateCastStatus(`Connected as Remote to room: ${code}`);
   showToast(`Linked to TV (${code})!`);
+  
+  document.getElementById('virtual-remote-fab').style.display = 'flex';
+  
   setTimeout(closeCastModal, 1500);
 }
 
@@ -948,10 +951,59 @@ function pushOverlayState() {
 
 window.addEventListener('popstate', () => {
   // Always close topmost overlay when pressing hardware Back
-  if (document.getElementById('player-overlay').classList.contains('open')) closePlayer(true);
+  if (document.getElementById('virtual-remote-overlay').classList.contains('open')) closeVirtualRemote(true);
+  else if (document.getElementById('player-overlay').classList.contains('open')) closePlayer(true);
   else if (document.getElementById('cast-overlay').classList.contains('open')) closeCastModal(true);
   else if (document.getElementById('search-overlay').classList.contains('open')) closeSearch(true);
   else if (document.getElementById('modal-overlay').classList.contains('open')) closeModal(true);
+});
+
+// ── VIRTUAL REMOTE ────────────────────────────────────────────────────────
+function openVirtualRemote() {
+  pushOverlayState();
+  document.getElementById('virtual-remote-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeVirtualRemote(fromPopState = false) {
+  if (!fromPopState && history.state && history.state.isOverlay) { history.back(); return; }
+  document.getElementById('virtual-remote-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleVirtualRemoteOverlayClick(e) {
+  if (e.target === document.getElementById('virtual-remote-overlay')) closeVirtualRemote();
+}
+
+function sendRemoteKey(key) {
+  if (!firebaseDb || !currentRoomCode) return;
+  const cmd = {
+    action: "remote_key",
+    key: key,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    sentAt: Date.now()
+  };
+  firebaseDb.ref(`rooms/${currentRoomCode}/command`).set(cmd);
+  if (navigator.vibrate) navigator.vibrate(50);
+}
+
+// ── PWA INSTALL ───────────────────────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) {
+    btn.style.display = 'flex';
+    btn.onclick = async () => {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        btn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    };
+  }
 });
 
 // ── START ─────────────────────────────────────────────────────────────────

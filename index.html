@@ -5,11 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CineStream — Watch Free Movies & TV</title>
+  <meta name="theme-color" content="#0d0d0c">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Netflix_logo.svg/2560px-Netflix_logo.svg.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+  </script>
 </head>
 
 <body>
@@ -138,20 +146,52 @@
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-      <div class="modal-body" style="padding-top: 40px; text-align: center;">
-        <h2 style="margin-bottom: 10px; color: var(--white);">Link to TV</h2>
-        <p style="color: var(--text-dim); margin-bottom: 24px; font-size: 13px;">Generate a code to use this screen as a TV, or enter a code to use this device as a remote.</p>
+      <div class="modal-body" style="text-align: center; padding: 30px 20px;">
+        <h2 style="margin-bottom: 20px; color: var(--text);">Link with TV</h2>
         
-        <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; margin-bottom: 24px; border: 1px solid var(--border);">
-          <label style="display:block; text-align:left; font-size: 11px; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; letter-spacing: 1px;">ROOM CODE</label>
-          <div style="display:flex; gap: 10px;">
-            <input type="text" id="room-code-input" placeholder="e.g. ABCDE1" maxlength="12" style="flex:1; background: var(--bg3); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; outline: none; font-size: 16px; text-transform: uppercase; text-align: center; font-weight: 700; letter-spacing: 2px;">
-          </div>
-        </div>
+        <!-- PWA Install Button (Optional) -->
+        <button id="pwa-install-btn" style="display:none; width: 100%; background: var(--bg2); color: var(--text); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Install App to Home Screen
+        </button>
 
-        <div style="display: flex; gap: 12px; flex-direction: column;">
-          <button class="modal-play" onclick="connectAsRemote()" style="width: 100%; justify-content: center; background: var(--accent);">
-            Connect as Remote
+        <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;">
+          Enter the code displayed on your TV to use this device as a remote.
+        </p>
+        <input type="text" id="room-code-input" placeholder="Enter Code (e.g., A7K9)" maxlength="6"
+          style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); text-align: center; font-size: 18px; font-weight: bold; letter-spacing: 2px;">
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-play" style="flex: 1;" onclick="connectAsRemote()">Link as Remote</button>
+          <button class="btn-info" style="flex: 1;" onclick="connectAsTV()">Generate TV Code</button>
+        </div>
+        <div id="cast-status" style="margin-top: 15px; font-size: 13px; color: var(--accent);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Virtual Remote FAB -->
+  <button id="virtual-remote-fab" onclick="openVirtualRemote()" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="5" y="2" width="14" height="20" rx="4" ry="4"></rect>
+      <circle cx="12" cy="18" r="1.5"></circle>
+      <circle cx="12" cy="7" r="1.5"></circle>
+      <circle cx="12" cy="11" r="1.5"></circle>
+    </svg>
+  </button>
+
+  <!-- Virtual Remote Modal -->
+  <div id="virtual-remote-overlay" onclick="handleVirtualRemoteOverlayClick(event)">
+    <div class="modal" id="virtual-remote-modal" style="max-width: 320px; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px);">
+      <div style="padding: 20px; text-align: center;">
+        <h3 style="margin-bottom: 20px; color: var(--text);">Remote Control</h3>
+        
+        <div class="d-pad">
+          <button class="d-btn up" onclick="sendRemoteKey('up')"><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
+          <div class="d-middle">
+            <button class="d-btn left" onclick="sendRemoteKey('left')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button class="d-btn center" onclick="sendRemoteKey('enter')">OK</button>
+            <button class="d-btn right" onclick="sendRemoteKey('right')"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
           </button>
           <button class="btn-info" onclick="connectAsTV()" style="width: 100%; justify-content: center; margin-bottom: 10px;">
             Generate TV Code

@@ -18,7 +18,7 @@
   --card-h: 270px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overscroll-behavior-y:none}
 body{
   background:var(--bg);
   color:var(--text);
@@ -26,6 +26,7 @@ body{
   font-size:14px;
   overflow-x:hidden;
   min-height:100vh;
+  overscroll-behavior-y:none
 }
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;border:none;outline:none;background:none;font-family:'Sora',sans-serif}
@@ -216,6 +217,63 @@ img{display:block}
 .btn-play:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 6px 28px var(--accent-glow)}
 .btn-play:active{transform:translateY(0)}
 .btn-play svg{width:18px;height:18px;fill:currentColor}
+.player-tv-controls{
+  display:none;align-items:center;gap:12px;
+  width:100%;max-width:1200px;margin-top:16px;
+  background:rgba(255,255,255,0.05);padding:16px;
+  border-radius:8px;border:1px solid var(--border);
+}
+
+/* Virtual Remote */
+#virtual-remote-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(232,54,93,0.4);
+  z-index: 1000;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+#virtual-remote-fab:hover { transform: scale(1.1); }
+#virtual-remote-fab svg { width: 30px; height: 30px; }
+
+#virtual-remote-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.6); z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#virtual-remote-overlay.open { opacity: 1; pointer-events: auto; }
+
+.d-pad {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin: 20px auto; width: fit-content;
+}
+.d-middle { display: flex; gap: 10px; align-items: center; }
+.d-btn {
+  background: var(--bg3); color: white; border: 1px solid var(--border);
+  width: 60px; height: 60px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
+}
+.d-btn:active { background: var(--accent); transform: scale(0.95); }
+.d-btn svg { width: 24px; height: 24px; }
+.d-btn.center { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent); background: var(--bg2); }
+.action-btn {
+  background: var(--bg3); color: white; padding: 12px 20px; border-radius: 8px;
+  display: flex; align-items: center; gap: 8px; font-weight: bold; cursor: pointer;
+}
+.action-btn svg { width: 20px; height: 20px; }
+
+@media(max-width:1200px){
 .btn-info{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,0.12);
