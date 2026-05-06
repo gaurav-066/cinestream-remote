@@ -18,3 +18,5 @@
 
 **What's next:**
 - End-to-end testing: Open the site on two different devices (e.g. Phone and PC/TV). Generate a code on one, enter it on the other. Try to play a movie from the remote!
+
+
