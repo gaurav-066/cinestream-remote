@@ -108,7 +108,7 @@ function setLoaderProgress(p) {
 
 // ── Image helpers ───────────────────────────────────────────────────────────
 function cardImgHTML(item) {
-  const src = item.backdrop || item.poster;
+  const src = item.poster || item.backdrop;
   if (src) {
     return `<img src="${src}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.parentNode.innerHTML=noImgHTML('${escHtml(item.title)}')" >`;
   }
@@ -726,7 +726,7 @@ async function doSearch(q) {
   filtered.forEach(cacheItem);
   results.innerHTML = filtered.map(item => `
     <div class="card" onclick="closeSearch();openModal(${item.id},'${item.type}')" style="width:100%">
-      <div class="card-img-wrap" style="aspect-ratio:16/9;height:auto">
+      <div class="card-img-wrap">
         ${cardImgHTML(item)}
         <div class="card-overlay">
           <div class="card-play-btn">
