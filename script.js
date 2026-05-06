@@ -311,7 +311,8 @@ async function showSection(section) {
   if (section === 'home') navLinks[0].classList.add('active');
   else if (section === 'anime') navLinks[3].classList.add('active');
 
-  hero.style.display = 'flex';
+  const heroEl = document.getElementById('hero');
+  if (heroEl) heroEl.style.display = '';
   content.innerHTML = '';
 
   if (heroTimer) clearInterval(heroTimer);
@@ -637,7 +638,9 @@ function playItem(id, type, season, episode) {
   pushOverlayState();
   document.getElementById('player-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 150); // auto-focus player controls
+  if (currentCastMode === 'tv') {
+    setTimeout(tvSyncFocus, 150);
+  }
 }
 
 function playerChangedEp(id, type) {
@@ -666,10 +669,6 @@ function closePlayer(fromPopState = false) {
   const overlay = document.getElementById('player-overlay');
   overlay.classList.remove('open');
   overlay.classList.remove('tv-mode');
-  
-  const exitBtn = document.getElementById('tv-exit-btn');
-  if (exitBtn) exitBtn.style.display = 'none';
-
   document.getElementById('player-iframe').src = '';
   document.body.style.overflow = '';
   window._playState = null;
@@ -901,9 +900,6 @@ async function connectAsTV() {
       const topbar = document.querySelector('.player-topbar');
       if (topbar) topbar.style.display = 'none';
 
-      const exitBtn = document.getElementById('tv-exit-btn');
-      if (exitBtn) exitBtn.style.display = 'flex';
-
       const overlay = document.getElementById('player-overlay');
       overlay.classList.add('open');
       overlay.classList.add('tv-mode');
@@ -1044,8 +1040,7 @@ let tvFocusBeforeModal = null; // remember card that opened modal
 const TV_CONTEXTS = {
   player: [
     '#player-overlay .source-btn',
-    '#player-overlay .player-close',
-    '#tv-exit-btn'
+    '#player-overlay .player-close'
   ],
   modal: [
     '#modal-overlay .modal-play',
@@ -1111,8 +1106,6 @@ function tvSyncFocus() {
     const tvMode = document.getElementById('player-overlay').classList.contains('tv-mode');
     if (tvMode) {
       // Full-screen TV cast: only exit button matters
-      const exit = document.getElementById('tv-exit-btn');
-      tvSetFocus(exit && tvIsVisible(exit) ? exit : focusables[0]);
     } else {
       // Normal player: land on close button
       const close = document.querySelector('#player-overlay .player-close');

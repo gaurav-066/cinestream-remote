@@ -25,8 +25,32 @@
 **What passed:**
 - Navigation is 100% reliable and never gets "stuck".
 - Layout looks professional on both Desktop and TV viewports.
-- Backdrops correctly fill the modal hero.
+- Long-press support: Allow faster navigation when holding down a D-pad button.
+
+## Session 2026-05-06 (Responsive Fixes)
+
+**What was built:**
+- **Enhanced Responsive Design**:
+    - Overlap Fix: Removed `overflow: hidden` from Hero to prevent clipping and adjusted `min-height` on mobile (50vh-70vh).
+    - Layout Strategy: Shifted from flexbox-centering to standard block layout with padding for the Hero section on mobile. Removed JS `display: flex` override to allow CSS to control the layout.
+    - Content Robustness: Added explicit `z-index`, `background`, and `margin-top` to the `#content` section on mobile to ensure it never overlaps with the Hero.
+    - Title Scaling: Implemented `clamp()` and media query overrides for the Hero title to ensure it fits on phone screens.
+    - Spacing: Reduced row margins on mobile and improved `hero-content` padding.
+    - Button Layout: Buttons now stack and fill width on mobile (`flex: 1`) for better touch targets.
+- **TV Player Auto-Hide UI**:
+    - Implemented inactivity timer (3s) for the TV Exit button.
+    - Controls automatically fade out during playback to provide a clean cinematic experience.
+    - Activity Detection: UI reappears instantly on mouse movement or remote controller navigation.
+
+**What was tested:**
+- Simulated mobile viewports (360px - 768px).
+- Verified Hero content doesn't overlap with the first row of movie cards.
+- Tested player UI auto-hide by waiting 3 seconds; verified it returns on mouse move.
+
+**What passed:**
+- Overlap issue is resolved; content flows naturally on narrow screens.
+- Hero buttons are easier to tap on phones.
 
 **What's next:**
-- Bi-directional sync: Update the remote UI state when the TV player state changes (e.g. pause/play status).
-- Long-press support: Allow faster navigation when holding down a D-pad button.
+- Bi-directional sync for remote status.
+- Finalizing TV player controls.
