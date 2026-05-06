@@ -182,23 +182,41 @@
   <!-- Virtual Remote Modal -->
   <div id="virtual-remote-overlay" onclick="handleVirtualRemoteOverlayClick(event)">
     <div class="modal" id="virtual-remote-modal" style="max-width: 320px; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px);">
-      <div style="padding: 20px; text-align: center;">
+      <div style="padding: 24px; text-align: center; position: relative;">
         <h3 style="margin-bottom: 20px; color: var(--text);">Remote Control</h3>
-        
+
         <div class="d-pad">
-          <button class="d-btn up" onclick="sendRemoteKey('up')"><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
-          <div class="d-middle">
-            <button class="d-btn left" onclick="sendRemoteKey('left')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-            <button class="d-btn center" onclick="sendRemoteKey('enter')">OK</button>
-            <button class="d-btn right" onclick="sendRemoteKey('right')"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
-          </div>
+          <button class="d-btn" onclick="sendRemoteKey('up')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
           </button>
-          <button class="btn-info" onclick="connectAsTV()" style="width: 100%; justify-content: center; margin-bottom: 10px;">
-            Generate TV Code
+          <div class="d-middle">
+            <button class="d-btn" onclick="sendRemoteKey('left')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="d-btn center" onclick="sendRemoteKey('enter')">OK</button>
+            <button class="d-btn" onclick="sendRemoteKey('right')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+          <button class="d-btn" onclick="sendRemoteKey('down')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         </div>
 
-        <div id="cast-status" style="margin-top: 15px; font-size: 13px; color: #22c55e; font-weight: 600; display: none;"></div>
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
+          <button class="action-btn" onclick="sendRemoteKey('back')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+          </button>
+          <button class="action-btn" onclick="sendRemoteKey('playpause')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></svg>
+            Play
+          </button>
+        </div>
+
+        <button class="modal-close" onclick="closeVirtualRemote()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </div>
