@@ -596,6 +596,11 @@ function playItem(id, type, season, episode) {
     tvCtrl.innerHTML = '';
   }
 
+  // Restore UI elements in case they were hidden by a TV Cast
+  document.getElementById('player-source-bar').style.display = 'flex';
+  const topbar = document.querySelector('.player-topbar');
+  if (topbar) topbar.style.display = 'flex';
+
   // Store current state
   window._playState = { id, type, season, episode };
 
@@ -803,17 +808,21 @@ async function connectAsTV() {
       document.getElementById('src-videasy').classList.toggle('active', currentSource === 'videasy');
       document.getElementById('src-vidking').classList.toggle('active', currentSource === 'vidking');
       
-      // Force autoplay on the received URL
+      // Force autoplay on the received URL and hide embed overlay
       let finalUrl = cmd.media.url;
+      finalUrl = finalUrl.replace('overlay=true', 'autoplay=true');
       if (!finalUrl.includes('autoplay=')) {
-        finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+        finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=true';
       }
       document.getElementById('player-iframe').src = finalUrl;
       
       window._playState = cmd.media.state || null;
       
-      const tvCtrl = document.getElementById('player-tv-controls');
-      tvCtrl.style.display = 'none'; // hide controls on TV to keep it clean
+      // Hide all UI controls so it's truly fullscreen TV mode
+      document.getElementById('player-tv-controls').style.display = 'none';
+      document.getElementById('player-source-bar').style.display = 'none';
+      const topbar = document.querySelector('.player-topbar');
+      if (topbar) topbar.style.display = 'none';
       
       const overlay = document.getElementById('player-overlay');
       overlay.classList.add('open');
