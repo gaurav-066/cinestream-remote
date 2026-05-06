@@ -834,8 +834,16 @@ async function connectAsTV() {
     }
   });
 
+  // Listen for remote presence to auto-close modal
+  firebaseDb.ref(`rooms/${code}/presence/remote`).on('value', (snap) => {
+    if (snap.val() && snap.val().connected) {
+      showToast("Remote connected! Ready to receive casts.");
+      closeCastModal();
+    }
+  });
+
   updateCastStatus(`This screen is now TV. Room Code: ${code}`);
-  showToast("Ready to receive casts!");
+  showToast("Waiting for remote to connect...");
 }
 
 async function sendCastCommand(media) {
