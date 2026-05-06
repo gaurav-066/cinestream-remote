@@ -630,7 +630,9 @@ function switchSource(source) {
 }
 
 function closePlayer() {
-  document.getElementById('player-overlay').classList.remove('open');
+  const overlay = document.getElementById('player-overlay');
+  overlay.classList.remove('open');
+  overlay.classList.remove('tv-mode');
   document.getElementById('player-iframe').src = '';
   document.body.style.overflow = '';
   window._playState = null;
@@ -826,6 +828,7 @@ async function connectAsTV() {
 
       const overlay = document.getElementById('player-overlay');
       overlay.classList.add('open');
+      overlay.classList.add('tv-mode'); // Force full screen styles
       document.body.style.overflow = 'hidden';
 
       // Attempt Auto-Fullscreen
