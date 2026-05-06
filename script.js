@@ -1133,6 +1133,8 @@ function tvSpatialNavigate(key) {
 
   let best      = null;
   let bestScore = Infinity;
+  let bestFixed = null;         // fallback candidate (fixed navbar)
+  let bestFixedScore = Infinity;
 
   for (const el of all) {
     if (el === tvFocusedEl) continue;
@@ -1140,9 +1142,6 @@ function tvSpatialNavigate(key) {
     const ex = r.left + r.width  / 2;
     const ey = r.top  + r.height / 2;
 
-    // For Up/Down: use page-relative Y so off-viewport cards beat the fixed navbar.
-    // Fixed elements always stay at the same viewport Y regardless of scroll,
-    // so adding scrollY inflates their "document Y" incorrectly — we detect and skip them.
     const isFixed = (function(node) {
       while (node && node !== document.body) {
         if (window.getComputedStyle(node).position === 'fixed') return true;
@@ -1151,11 +1150,9 @@ function tvSpatialNavigate(key) {
       return false;
     })(el);
 
-    const dx = ex - cx;
-    // For horizontal: use viewport dy (left/right within same visible row)
-    // For vertical: use document dy so scrolled-off cards are correctly ranked
-    const viewDy   = ey  - cy;
-    const pageDy   = (ey + window.scrollY) - curPageY;
+    const dx     = ex - cx;
+    const viewDy = ey  - cy;
+    const pageDy = (ey + window.scrollY) - curPageY;
 
     let primary, secondary;
 
@@ -1166,22 +1163,28 @@ function tvSpatialNavigate(key) {
       if (dx >= 0 || Math.abs(viewDy) > rowTolerance) continue;
       primary = -dx; secondary = Math.abs(viewDy);
     } else if (key === 'down') {
-      if (isFixed) continue;           // skip fixed navbar
       if (pageDy <= 0) continue;
       primary = pageDy; secondary = Math.abs(dx);
     } else if (key === 'up') {
-      if (isFixed) continue;           // skip fixed navbar
       if (pageDy >= 0) continue;
       primary = -pageDy; secondary = Math.abs(dx);
     }
     if (primary === undefined) continue;
 
     const score = primary + secondary * 2.5;
-    if (score < bestScore) { bestScore = score; best = el; }
+
+    if (isFixed && (key === 'up' || key === 'down')) {
+      // Fixed nav: only keep as fallback — non-fixed cards always win
+      if (score < bestFixedScore) { bestFixedScore = score; bestFixed = el; }
+    } else {
+      if (score < bestScore) { bestScore = score; best = el; }
+    }
   }
 
-  // Nothing found → stay put (clamp at edge)
+  // Use non-fixed winner; fall back to fixed (navbar) only if nothing else found
   if (best) tvSetFocus(best);
+  else if (bestFixed) tvSetFocus(bestFixed);
+  // else: clamp (stay put)
 }
 
 // ── START ─────────────────────────────────────────────────────────────────
