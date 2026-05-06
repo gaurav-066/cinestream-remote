@@ -444,12 +444,14 @@ async function openModal(id, type) {
         <span class="ep-label">Episode</span>
         <select class="ep-select" id="modal-episode" onchange="updateEpisode()">
           ${(() => {
-            let count = 24;
-            if (item.type === 'tv' && item.seasons) {
-              const s1 = item.seasons.find(s => s.season_number === 1);
-              if (s1) count = s1.episode_count;
-            } else if (item.episodesCount) {
-              count = item.episodesCount;
+            let count = 24; // Default fallback
+            if (item.type === 'tv') {
+              if (item.seasons) {
+                const s1 = item.seasons.find(s => s.season_number === 1);
+                if (s1) count = s1.episode_count;
+              }
+            } else if (item.type === 'anime') {
+              if (item.episodesCount) count = item.episodesCount;
             }
             return Array.from({ length: count }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('');
           })()}
@@ -537,11 +539,17 @@ async function updateEpisode() {
   if (!epSelect || !currentItem) return;
 
   // For TV shows, we can try to get the exact episode count for the selected season
-  if (currentItem.type === 'tv' && currentItem.seasons) {
-    const seasonData = currentItem.seasons.find(s => s.season_number === currentSeason);
-    if (seasonData) {
-      const count = seasonData.episode_count || 24;
-      epSelect.innerHTML = Array.from({ length: count }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('');
+  if (currentItem.type === 'tv') {
+    if (currentItem.seasons) {
+      const seasonData = currentItem.seasons.find(s => s.season_number === currentSeason);
+      if (seasonData) {
+        const count = seasonData.episode_count || 24;
+        epSelect.innerHTML = Array.from({ length: count }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('');
+      }
+    }
+  } else if (currentItem.type === 'anime') {
+    if (currentItem.episodesCount) {
+      epSelect.innerHTML = Array.from({ length: currentItem.episodesCount }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('');
     }
   }
   
@@ -641,7 +649,15 @@ function playItem(id, type, season, episode) {
   const tvCtrl = document.getElementById('player-tv-controls');
   if (type === 'tv' || (type === 'anime' && !item?.isMovie)) {
     const sCount = item?.seasonsCount || 1;
-    const eCount = (type === 'tv' ? 24 : item?.episodesCount) || 24;
+    let eCount = 24;
+    if (type === 'tv') {
+      if (item?.seasons) {
+        const sData = item.seasons.find(sd => sd.season_number === season);
+        if (sData) eCount = sData.episode_count || 24;
+      }
+    } else if (type === 'anime') {
+      if (item?.episodesCount) eCount = item.episodesCount;
+    }
 
     tvCtrl.style.display = 'flex';
     tvCtrl.innerHTML = `
@@ -680,13 +696,19 @@ function playerChangedEp(id, type) {
   if (!epSelect) return;
 
   const item = getCached(type, id);
-  if (type === 'tv' && item?.seasons) {
-    const seasonData = item.seasons.find(sd => sd.season_number === s);
-    if (seasonData) {
-      const currentE = parseInt(epSelect.value || 1);
-      const count = seasonData.episode_count || 24;
-      epSelect.innerHTML = Array.from({ length: count }, (_, i) => `<option value="${i + 1}" ${i + 1 === currentE ? 'selected' : ''}>E${i + 1}</option>`).join('');
+  if (item) {
+    let count = 24;
+    if (type === 'tv') {
+      if (item.seasons) {
+        const seasonData = item.seasons.find(sd => sd.season_number === s);
+        if (seasonData) count = seasonData.episode_count || 24;
+      }
+    } else if (type === 'anime') {
+      if (item.episodesCount) count = item.episodesCount;
     }
+    
+    const currentE = parseInt(epSelect.value || 1);
+    epSelect.innerHTML = Array.from({ length: count }, (_, i) => `<option value="${i + 1}" ${i + 1 === currentE ? 'selected' : ''}>E${i + 1}</option>`).join('');
   }
 
   const e = parseInt(epSelect.value || 1);
