@@ -610,6 +610,20 @@ img{display:block}
   border:none;
 }
 
+/* TV SPATIAL FOCUS RING */
+.tv-focused {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 6px var(--accent-glow), 0 0 30px var(--accent-glow) !important;
+  transform: scale(1.08) !important;
+  z-index: 50 !important;
+  transition: outline 0.15s, box-shadow 0.15s, transform 0.15s !important;
+}
+/* Cards need to show glow on their img-wrap too */
+.card.tv-focused .card-img-wrap {
+  box-shadow: 0 0 0 3px var(--accent), 0 0 30px var(--accent-glow) !important;
+}
+
 /* TV MODE FULLSCREEN STYLES */
 #player-overlay.tv-mode {
   padding: 0;

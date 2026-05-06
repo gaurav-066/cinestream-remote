@@ -850,7 +850,6 @@ async function connectAsTV() {
     if (cmd.action === 'play' && cmd.media) {
       showToast(`Received cast: ${cmd.media.title}`);
 
-      // Manually open the player with the received data
       document.getElementById('player-title').textContent = cmd.media.title;
       document.getElementById('player-ep-info').textContent = cmd.media.epInfo || '';
 
@@ -858,7 +857,6 @@ async function connectAsTV() {
       document.getElementById('src-videasy').classList.toggle('active', currentSource === 'videasy');
       document.getElementById('src-vidking').classList.toggle('active', currentSource === 'vidking');
 
-      // Force autoplay on the received URL and hide embed overlay
       let finalUrl = cmd.media.url;
       finalUrl = finalUrl.replace('overlay=true', 'autoplay=true');
       if (!finalUrl.includes('autoplay=')) {
@@ -868,20 +866,22 @@ async function connectAsTV() {
 
       window._playState = cmd.media.state || null;
 
-      // Hide all UI controls so it's truly fullscreen TV mode
       document.getElementById('player-tv-controls').style.display = 'none';
       document.getElementById('player-source-bar').style.display = 'none';
       const topbar = document.querySelector('.player-topbar');
       if (topbar) topbar.style.display = 'none';
 
-      // Show the TV Exit Button
       const exitBtn = document.getElementById('tv-exit-btn');
       if (exitBtn) exitBtn.style.display = 'flex';
 
       const overlay = document.getElementById('player-overlay');
       overlay.classList.add('open');
-      overlay.classList.add('tv-mode'); // Force full screen styles
+      overlay.classList.add('tv-mode');
       document.body.style.overflow = 'hidden';
+    }
+
+    if (cmd.action === 'remote_key') {
+      tvSpatialNavigate(cmd.key);
     }
   });
 
@@ -1005,6 +1005,94 @@ window.addEventListener('beforeinstallprompt', (e) => {
     };
   }
 });
+
+// ── TV SPATIAL NAVIGATION ──────────────────────────────────────────────────
+let tvFocusedEl = null;
+
+function tvGetFocusables() {
+  // All interactive elements that should be navigable
+  const selectors = [
+    '.nav-links a',
+    '.nav-search-btn',
+    '.btn-play',
+    '.btn-info',
+    '.card',
+    '.modal-play',
+    '.source-btn',
+    '.ep-select',
+    '.rec-card',
+    '.modal-close',
+    '.player-close',
+    '#tv-exit-btn'
+  ].join(',');
+
+  return Array.from(document.querySelectorAll(selectors)).filter(el => {
+    if (!el.offsetParent && el.id !== 'tv-exit-btn') return false; // skip hidden
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  });
+}
+
+function tvSetFocus(el) {
+  if (tvFocusedEl) tvFocusedEl.classList.remove('tv-focused');
+  tvFocusedEl = el;
+  if (!el) return;
+  el.classList.add('tv-focused');
+  // Smooth scroll so the element is fully in view
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+}
+
+function tvSpatialNavigate(key) {
+  if (key === 'enter') {
+    if (tvFocusedEl) tvFocusedEl.click();
+    return;
+  }
+  if (key === 'back') {
+    history.back();
+    return;
+  }
+
+  const all = tvGetFocusables();
+  if (!all.length) return;
+
+  // If nothing focused yet, focus first element
+  if (!tvFocusedEl || !all.includes(tvFocusedEl)) {
+    tvSetFocus(all[0]);
+    return;
+  }
+
+  const cur = tvFocusedEl.getBoundingClientRect();
+  const cx = cur.left + cur.width / 2;
+  const cy = cur.top + cur.height / 2;
+
+  let best = null;
+  let bestScore = Infinity;
+
+  for (const el of all) {
+    if (el === tvFocusedEl) continue;
+    const r = el.getBoundingClientRect();
+    const ex = r.left + r.width / 2;
+    const ey = r.top + r.height / 2;
+    const dx = ex - cx;
+    const dy = ey - cy;
+
+    // For each direction, only consider elements in that direction
+    // Score = primary distance + penalty for off-axis drift
+    let primary, secondary;
+    if (key === 'right')  { if (dx <= 0) continue; primary = dx;   secondary = Math.abs(dy); }
+    if (key === 'left')   { if (dx >= 0) continue; primary = -dx;  secondary = Math.abs(dy); }
+    if (key === 'down')   { if (dy <= 0) continue; primary = dy;   secondary = Math.abs(dx); }
+    if (key === 'up')     { if (dy >= 0) continue; primary = -dy;  secondary = Math.abs(dx); }
+
+    if (primary === undefined) continue;
+
+    // Weight off-axis drift more heavily so we pick the most aligned element
+    const score = primary + secondary * 2.5;
+    if (score < bestScore) { bestScore = score; best = el; }
+  }
+
+  if (best) tvSetFocus(best);
+}
 
 // ── START ─────────────────────────────────────────────────────────────────
 init();
