@@ -782,6 +782,19 @@ async function connectAsRemote() {
 }
 
 async function connectAsTV() {
+  // Attempt Auto-Fullscreen immediately on user click to bypass browser security
+  try {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) {
+      document.documentElement.msRequestFullscreen();
+    }
+  } catch(e) {
+    console.warn("Fullscreen request failed", e);
+  }
+
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   document.getElementById('room-code-input').value = code;
 
@@ -830,19 +843,6 @@ async function connectAsTV() {
       overlay.classList.add('open');
       overlay.classList.add('tv-mode'); // Force full screen styles
       document.body.style.overflow = 'hidden';
-
-      // Attempt Auto-Fullscreen
-      try {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
-        } else if (document.documentElement.webkitRequestFullscreen) {
-          document.documentElement.webkitRequestFullscreen();
-        } else if (document.documentElement.msRequestFullscreen) {
-          document.documentElement.msRequestFullscreen();
-        }
-      } catch(e) {
-        console.warn("Fullscreen request failed", e);
-      }
     }
   });
 
