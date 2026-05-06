@@ -359,6 +359,7 @@ async function init() {
 
 // ── MODAL ─────────────────────────────────────────────────────────────────
 async function openModal(id, type) {
+  pushOverlayState();
   const overlay = document.getElementById('modal-overlay');
   const inner = document.getElementById('modal-inner');
 
@@ -500,7 +501,8 @@ function playFromModal() {
   setTimeout(() => playItem(id, type), 300);
 }
 
-function closeModal() {
+function closeModal(fromPopState = false) {
+  if (!fromPopState && history.state && history.state.isOverlay) { history.back(); return; }
   document.getElementById('modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
   currentItem = null;
@@ -604,6 +606,7 @@ function playItem(id, type, season, episode) {
   // Store current state
   window._playState = { id, type, season, episode };
 
+  pushOverlayState();
   document.getElementById('player-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -629,7 +632,8 @@ function switchSource(source) {
   document.getElementById('player-iframe').src = url;
 }
 
-function closePlayer() {
+function closePlayer(fromPopState = false) {
+  if (!fromPopState && history.state && history.state.isOverlay) { history.back(); return; }
   const overlay = document.getElementById('player-overlay');
   overlay.classList.remove('open');
   overlay.classList.remove('tv-mode');
@@ -664,12 +668,14 @@ function exitTVMode() {
 
 // ── SEARCH ────────────────────────────────────────────────────────────────
 function openSearch() {
+  pushOverlayState();
   document.getElementById('search-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('search-input').focus(), 100);
 }
 
-function closeSearch() {
+function closeSearch(fromPopState = false) {
+  if (!fromPopState && history.state && history.state.isOverlay) { history.back(); return; }
   document.getElementById('search-overlay').classList.remove('open');
   document.getElementById('search-input').value = '';
   document.getElementById('search-results').innerHTML = '';
@@ -766,11 +772,13 @@ async function initFirebase() {
 }
 
 function openCastModal() {
+  pushOverlayState();
   document.getElementById('cast-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
-function closeCastModal() {
+function closeCastModal(fromPopState = false) {
+  if (!fromPopState && history.state && history.state.isOverlay) { history.back(); return; }
   document.getElementById('cast-overlay').classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -932,6 +940,19 @@ playItem = async function (id, type, season, episode) {
   // Otherwise, play normally on this device
   originalPlayItem(id, type, season, episode);
 };
+
+// ── HISTORY STATE MANAGEMENT (HARDWARE BACK BUTTON) ───────────────────────
+function pushOverlayState() {
+  history.pushState({ isOverlay: true }, '', '');
+}
+
+window.addEventListener('popstate', () => {
+  // Always close topmost overlay when pressing hardware Back
+  if (document.getElementById('player-overlay').classList.contains('open')) closePlayer(true);
+  else if (document.getElementById('cast-overlay').classList.contains('open')) closeCastModal(true);
+  else if (document.getElementById('search-overlay').classList.contains('open')) closeSearch(true);
+  else if (document.getElementById('modal-overlay').classList.contains('open')) closeModal(true);
+});
 
 // ── START ─────────────────────────────────────────────────────────────────
 init();
