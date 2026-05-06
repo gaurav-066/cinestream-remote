@@ -311,6 +311,7 @@ async function showSection(section) {
   if (section === 'home') navLinks[0].classList.add('active');
   else if (section === 'anime') navLinks[3].classList.add('active');
 
+  hero.style.display = 'flex';
   content.innerHTML = '';
 
   if (heroTimer) clearInterval(heroTimer);
@@ -322,6 +323,12 @@ async function showSection(section) {
 
   const cats = section === 'anime' ? ANIME_CATEGORIES : CATEGORIES;
   cats.forEach(cat => content.appendChild(createRowEl(cat)));
+
+  if (section === 'anime') {
+    // Add extra padding to the first row of anime so it doesn't hit the hero too soon
+    const firstRow = content.querySelector('.row');
+    if (firstRow) firstRow.style.marginTop = '40px';
+  }
 
   if (section === 'home') {
     const data = await apiFetch('/trending?window=week');
