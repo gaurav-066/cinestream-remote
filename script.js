@@ -827,7 +827,7 @@ async function connectAsTV() {
     console.warn("Fullscreen request failed", e);
   }
 
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const code = Math.random().toString(36).substring(2, 6).toUpperCase();
   document.getElementById('room-code-input').value = code;
 
   updateCastStatus("Connecting to Firebase...");
