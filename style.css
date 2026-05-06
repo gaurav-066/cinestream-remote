@@ -273,7 +273,7 @@ img{display:block}
 }
 .action-btn svg { width: 20px; height: 20px; }
 
-@media(max-width:1200px){
+
 .btn-info{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,0.12);
