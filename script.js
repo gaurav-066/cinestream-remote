@@ -633,9 +633,33 @@ function closePlayer() {
   const overlay = document.getElementById('player-overlay');
   overlay.classList.remove('open');
   overlay.classList.remove('tv-mode');
+  
+  const exitBtn = document.getElementById('tv-exit-btn');
+  if (exitBtn) exitBtn.style.display = 'none';
+
   document.getElementById('player-iframe').src = '';
   document.body.style.overflow = '';
   window._playState = null;
+}
+
+function exitTVMode() {
+  closePlayer();
+  
+  // Exit full screen browser mode
+  try {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } catch(e) {}
+  
+  // Clean up firebase room if we were the TV
+  if (currentCastMode === 'tv' && currentRoomCode && firebaseDb) {
+    firebaseDb.ref(`rooms/${currentRoomCode}`).remove();
+  }
+  
+  currentCastMode = null;
+  currentRoomCode = null;
+  showToast("Exited TV Mode");
 }
 
 // ── SEARCH ────────────────────────────────────────────────────────────────
@@ -838,6 +862,10 @@ async function connectAsTV() {
       document.getElementById('player-source-bar').style.display = 'none';
       const topbar = document.querySelector('.player-topbar');
       if (topbar) topbar.style.display = 'none';
+
+      // Show the TV Exit Button
+      const exitBtn = document.getElementById('tv-exit-btn');
+      if (exitBtn) exitBtn.style.display = 'flex';
 
       const overlay = document.getElementById('player-overlay');
       overlay.classList.add('open');
