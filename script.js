@@ -92,6 +92,13 @@ function normalizeItem(item) {
   // For Anime, backdrop is already mapped in anilistFetch, but just in case:
   if (item.bannerImage && !item.backdrop) item.backdrop = item.bannerImage;
   
+  // TMDB / Meta metadata
+  if (item.number_of_seasons) item.seasonsCount = item.number_of_seasons;
+  if (item.number_of_episodes) item.episodesCount = item.number_of_episodes;
+  
+  // AniList metadata
+  if (item.episodes && !item.episodesCount) item.episodesCount = item.episodes;
+
   return item;
 }
 
@@ -430,13 +437,13 @@ async function openModal(id, type) {
       <div class="ep-row">
         <span class="ep-label">Season</span>
         <select class="ep-select" id="modal-season" onchange="updateEpisode()">
-          ${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}">Season ${i + 1}</option>`).join('')}
+          ${Array.from({ length: item.seasonsCount || 1 }, (_, i) => `<option value="${i + 1}">Season ${i + 1}</option>`).join('')}
         </select>
       </div>
       <div class="ep-row">
         <span class="ep-label">Episode</span>
         <select class="ep-select" id="modal-episode" onchange="updateEpisode()">
-          ${Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('')}
+          ${Array.from({ length: (item.type === 'tv' ? 24 : item.episodesCount) || 24 }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -612,14 +619,17 @@ function playItem(id, type, season, episode) {
   // TV controls
   const tvCtrl = document.getElementById('player-tv-controls');
   if (type === 'tv' || (type === 'anime' && !item?.isMovie)) {
+    const sCount = item?.seasonsCount || 1;
+    const eCount = (type === 'tv' ? 24 : item?.episodesCount) || 24;
+
     tvCtrl.style.display = 'flex';
     tvCtrl.innerHTML = `
       <span class="player-source-label">Episode:</span>
       <select class="ep-select" id="player-season" onchange="playerChangedEp(${id},'${type}')">
-        ${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${i + 1 === season ? 'selected' : ''}>S${i + 1}</option>`).join('')}
+        ${Array.from({ length: sCount }, (_, i) => `<option value="${i + 1}" ${i + 1 === season ? 'selected' : ''}>S${i + 1}</option>`).join('')}
       </select>
       <select class="ep-select" id="player-ep" onchange="playerChangedEp(${id},'${type}')">
-        ${Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}" ${i + 1 === episode ? 'selected' : ''}>E${i + 1}</option>`).join('')}
+        ${Array.from({ length: eCount }, (_, i) => `<option value="${i + 1}" ${i + 1 === episode ? 'selected' : ''}>E${i + 1}</option>`).join('')}
       </select>
     `;
   } else {

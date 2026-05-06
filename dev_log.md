@@ -49,6 +49,7 @@
 
 **What passed:**
 - Overlap issue is resolved; content flows naturally on narrow screens.
+- TV shows and Anime now show the correct number of seasons and episodes (dynamic metadata).
 - Hero buttons are easier to tap on phones.
 
 **What's next:**
