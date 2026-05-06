@@ -803,15 +803,34 @@ async function connectAsTV() {
       document.getElementById('src-videasy').classList.toggle('active', currentSource === 'videasy');
       document.getElementById('src-vidking').classList.toggle('active', currentSource === 'vidking');
       
-      document.getElementById('player-iframe').src = cmd.media.url;
+      // Force autoplay on the received URL
+      let finalUrl = cmd.media.url;
+      if (!finalUrl.includes('autoplay=')) {
+        finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+      }
+      document.getElementById('player-iframe').src = finalUrl;
       
       window._playState = cmd.media.state || null;
       
       const tvCtrl = document.getElementById('player-tv-controls');
       tvCtrl.style.display = 'none'; // hide controls on TV to keep it clean
       
-      document.getElementById('player-overlay').classList.add('open');
+      const overlay = document.getElementById('player-overlay');
+      overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
+      
+      // Attempt Auto-Fullscreen
+      try {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen();
+        }
+      } catch(e) {
+        console.warn("Fullscreen request failed", e);
+      }
     }
   });
 
