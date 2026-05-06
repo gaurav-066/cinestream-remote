@@ -1010,24 +1010,20 @@ window.addEventListener('beforeinstallprompt', (e) => {
 let tvFocusedEl = null;
 
 function tvGetFocusables() {
-  // All interactive elements that should be navigable
   const selectors = [
-    '.nav-links a',
-    '.nav-search-btn',
-    '.btn-play',
-    '.btn-info',
-    '.card',
-    '.modal-play',
-    '.source-btn',
-    '.ep-select',
-    '.rec-card',
-    '.modal-close',
-    '.player-close',
-    '#tv-exit-btn'
+    '.nav-links a', '.nav-search-btn', '.btn-play', '.btn-info',
+    '.card', '.modal-play', '.source-btn', '.ep-select',
+    '.rec-card', '.modal-close', '.player-close', '#tv-exit-btn'
   ].join(',');
 
   return Array.from(document.querySelectorAll(selectors)).filter(el => {
-    if (!el.offsetParent && el.id !== 'tv-exit-btn') return false; // skip hidden
+    // Check visibility via computed style (works even inside overflow:hidden scrollers)
+    let node = el;
+    while (node && node !== document.body) {
+      const s = window.getComputedStyle(node);
+      if (s.display === 'none' || s.visibility === 'hidden') return false;
+      node = node.parentElement;
+    }
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   });
@@ -1038,59 +1034,68 @@ function tvSetFocus(el) {
   tvFocusedEl = el;
   if (!el) return;
   el.classList.add('tv-focused');
-  // Smooth scroll so the element is fully in view
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
 
 function tvSpatialNavigate(key) {
-  if (key === 'enter') {
-    if (tvFocusedEl) tvFocusedEl.click();
-    return;
-  }
-  if (key === 'back') {
-    history.back();
-    return;
-  }
+  if (key === 'enter') { if (tvFocusedEl) tvFocusedEl.click(); return; }
+  if (key === 'back')  { history.back(); return; }
 
   const all = tvGetFocusables();
   if (!all.length) return;
 
-  // If nothing focused yet, focus first element
+  // Nothing focused yet → pick first visible element
   if (!tvFocusedEl || !all.includes(tvFocusedEl)) {
     tvSetFocus(all[0]);
     return;
   }
 
-  const cur = tvFocusedEl.getBoundingClientRect();
-  const cx = cur.left + cur.width / 2;
-  const cy = cur.top + cur.height / 2;
+  const cur  = tvFocusedEl.getBoundingClientRect();
+  const cx   = cur.left + cur.width  / 2;
+  const cy   = cur.top  + cur.height / 2;
+
+  // For left/right: only look in the same horizontal band (±70% of current height)
+  // This prevents jumping to another row when at the end of a row
+  const rowTolerance = cur.height * 0.7;
 
   let best = null;
   let bestScore = Infinity;
 
   for (const el of all) {
     if (el === tvFocusedEl) continue;
-    const r = el.getBoundingClientRect();
-    const ex = r.left + r.width / 2;
-    const ey = r.top + r.height / 2;
+    const r  = el.getBoundingClientRect();
+    const ex = r.left + r.width  / 2;
+    const ey = r.top  + r.height / 2;
     const dx = ex - cx;
     const dy = ey - cy;
 
-    // For each direction, only consider elements in that direction
-    // Score = primary distance + penalty for off-axis drift
     let primary, secondary;
-    if (key === 'right')  { if (dx <= 0) continue; primary = dx;   secondary = Math.abs(dy); }
-    if (key === 'left')   { if (dx >= 0) continue; primary = -dx;  secondary = Math.abs(dy); }
-    if (key === 'down')   { if (dy <= 0) continue; primary = dy;   secondary = Math.abs(dx); }
-    if (key === 'up')     { if (dy >= 0) continue; primary = -dy;  secondary = Math.abs(dx); }
+
+    if (key === 'right') {
+      // Must be to the right AND in the same row band
+      if (dx <= 0) continue;
+      if (Math.abs(dy) > rowTolerance) continue;
+      primary = dx; secondary = Math.abs(dy);
+    } else if (key === 'left') {
+      if (dx >= 0) continue;
+      if (Math.abs(dy) > rowTolerance) continue;
+      primary = -dx; secondary = Math.abs(dy);
+    } else if (key === 'down') {
+      if (dy <= 0) continue;
+      primary = dy; secondary = Math.abs(dx);
+    } else if (key === 'up') {
+      if (dy >= 0) continue;
+      primary = -dy; secondary = Math.abs(dx);
+    }
 
     if (primary === undefined) continue;
 
-    // Weight off-axis drift more heavily so we pick the most aligned element
+    // Penalize off-axis drift so we stay aligned
     const score = primary + secondary * 2.5;
     if (score < bestScore) { bestScore = score; best = el; }
   }
 
+  // If nothing found in this direction → stay put (clamp at edge)
   if (best) tvSetFocus(best);
 }
 
