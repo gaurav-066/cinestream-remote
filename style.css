@@ -618,9 +618,22 @@ img{display:block}
   box-shadow: 0 0 0 4px var(--accent), 0 0 40px var(--accent-glow) !important;
   transform: scale(1.08) !important;
   z-index: 100 !important;
-  background: var(--bg2); /* Ensure text background is solid when focused */
+  background: var(--bg2); 
   transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1) !important;
 }
+
+/* Circular buttons (like Modal Close) need a circular ring */
+.modal-close.tv-focused, .player-close.tv-focused {
+  border-radius: 50% !important;
+}
+
+/* High-contrast play button when focused */
+.modal-play.tv-focused {
+  background: var(--white) !important;
+  color: var(--bg) !important;
+  transform: scale(1.1) !important;
+}
+
 /* No double boundary — only the main card ring */
 .card.tv-focused .card-img-wrap {
   box-shadow: none !important;
