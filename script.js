@@ -82,6 +82,19 @@ function getCached(type, id) {
   return allItems[`${type}-${id}`] || null;
 }
 
+function normalizeItem(item) {
+  if (!item) return null;
+  // If it's TMDB data (from worker), ensure we have full backdrop/poster URLs if they exist as _path
+  const tmdbBase = 'https://image.tmdb.org/t/p/w500';
+  if (item.backdrop_path && !item.backdrop) item.backdrop = tmdbBase + item.backdrop_path;
+  if (item.poster_path && !item.poster) item.poster = tmdbBase + item.poster_path;
+  
+  // For Anime, backdrop is already mapped in anilistFetch, but just in case:
+  if (item.bannerImage && !item.backdrop) item.backdrop = item.bannerImage;
+  
+  return item;
+}
+
 function showToast(msg, dur = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -251,7 +264,8 @@ async function loadCategory(cat) {
   } else if (cat.path) {
     const data = await apiFetch(cat.path);
     if (data && Array.isArray(data)) {
-      for (const item of data) {
+      for (let item of data) {
+        item = normalizeItem(item);
         const key = `${item.type}-${item.id}`;
         if (!seen.has(key) && item.title && item.poster) {
           seen.add(key);
@@ -262,9 +276,10 @@ async function loadCategory(cat) {
     }
   } else if (cat.queries) {
     for (const q of cat.queries) {
-      const data = await apiFetch(`/find?q=${encodeURIComponent(q)}`);
+      let data = await apiFetch(`/find?q=${encodeURIComponent(q)}`);
       if (!data || !Array.isArray(data)) continue;
-      for (const item of data) {
+      for (let item of data) {
+        item = normalizeItem(item);
         const key = `${item.type}-${item.id}`;
         if (!seen.has(key) && item.title && item.poster) {
           seen.add(key);
@@ -312,7 +327,8 @@ async function showSection(section) {
     const data = await apiFetch('/trending?window=week');
     if (data && Array.isArray(data)) {
       const seen = new Set();
-      for (const item of data) {
+      for (let item of data) {
+        item = normalizeItem(item);
         const key = `${item.type}-${item.id}`;
         if (!seen.has(key) && item.poster && item.title) {
           seen.add(key);
@@ -385,6 +401,7 @@ async function openModal(id, type) {
   // If not cached, fetch (anime items should always be cached from list)
   if (!item && type !== 'anime') {
     item = await apiFetch(`/meta?type=${type}&id=${id}`);
+    item = normalizeItem(item);
     if (item) cacheItem(item);
   }
 
@@ -701,7 +718,7 @@ async function doSearch(q) {
     return;
   }
 
-  const filtered = data.filter(item => item.poster);
+  const filtered = data.map(normalizeItem).filter(item => item && item.poster);
   if (!filtered.length) {
     results.innerHTML = `<div class="search-empty">No results for "<strong>${escHtml(q)}</strong>"</div>`;
     return;
