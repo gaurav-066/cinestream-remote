@@ -14,14 +14,14 @@ let allItems = {}; // id→item cache
 
 // ── Categories ─────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { id: 'action',   title: '🔥 Action & Adventure',  queries: ['mission impossible', 'john wick', 'fast furious', 'mad max'] },
-  { id: 'scifi',    title: '🚀 Sci-Fi & Fantasy',     queries: ['inception', 'dune', 'interstellar', 'avatar', 'matrix'] },
-  { id: 'tvseries', title: '📺 Top TV Series',        queries: ['breaking bad', 'stranger things', 'game of thrones', 'the bear', 'succession'] },
-  { id: 'thriller', title: '🎭 Drama & Thriller',     queries: ['parasite', 'oppenheimer', 'gone girl', 'zodiac', 'prestige'] },
-  { id: 'marvel',   title: '⚡ Marvel & DC',          queries: ['avengers endgame', 'batman dark knight', 'spider-man', 'guardians of the galaxy'] },
-  { id: 'comedy',   title: '😂 Comedy & Feel-Good',   queries: ['ted lasso', 'the office', 'bridesmaids', 'superbad', 'knives out'] },
-  { id: 'horror',   title: '👻 Horror & Suspense',    queries: ['hereditary', 'midsommar', 'get out', 'quiet place', 'us 2019'] },
-  { id: 'classics', title: '🏆 All-Time Classics',    queries: ['godfather', 'pulp fiction', 'schindler list', 'shawshank', 'casablanca'] },
+  { id: 'action', title: '🔥 Action & Adventure', queries: ['mission impossible', 'john wick', 'fast furious', 'mad max'] },
+  { id: 'scifi', title: '🚀 Sci-Fi & Fantasy', queries: ['inception', 'dune', 'interstellar', 'avatar', 'matrix'] },
+  { id: 'tvseries', title: '📺 Top TV Series', queries: ['breaking bad', 'stranger things', 'game of thrones', 'the bear', 'succession'] },
+  { id: 'thriller', title: '🎭 Drama & Thriller', queries: ['parasite', 'oppenheimer', 'gone girl', 'zodiac', 'prestige'] },
+  { id: 'marvel', title: '⚡ Marvel & DC', queries: ['avengers endgame', 'batman dark knight', 'spider-man', 'guardians of the galaxy'] },
+  { id: 'comedy', title: '😂 Comedy & Feel-Good', queries: ['ted lasso', 'the office', 'bridesmaids', 'superbad', 'knives out'] },
+  { id: 'horror', title: '👻 Horror & Suspense', queries: ['hereditary', 'midsommar', 'get out', 'quiet place', 'us 2019'] },
+  { id: 'classics', title: '🏆 All-Time Classics', queries: ['godfather', 'pulp fiction', 'schindler list', 'shawshank', 'casablanca'] },
 ];
 
 const ANIME_CATEGORIES = [
@@ -69,7 +69,7 @@ async function apiFetch(path) {
     const r = await fetch(API + path);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return await r.json();
-  } catch(e) {
+  } catch (e) {
     return null;
   }
 }
@@ -82,7 +82,7 @@ function getCached(type, id) {
   return allItems[`${type}-${id}`] || null;
 }
 
-function showToast(msg, dur=2500) {
+function showToast(msg, dur = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
@@ -105,11 +105,11 @@ function noImgHTML(title) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
       <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
     </svg>
-    <span>${escHtml(title||'')}</span>
+    <span>${escHtml(title || '')}</span>
   </div>`;
 }
 function escHtml(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // ── Hero ────────────────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ function renderHero(idx) {
   }
 
   // Genres
-  const genresHTML = (item.genres||[]).map(g=>`<span class="hero-genre">${escHtml(g)}</span>`).join('');
+  const genresHTML = (item.genres || []).map(g => `<span class="hero-genre">${escHtml(g)}</span>`).join('');
 
   content.innerHTML = `
     <div class="hero-badge">
@@ -166,7 +166,7 @@ function renderHero(idx) {
   // Dots
   const dots = document.getElementById('hero-dots');
   dots.innerHTML = heroItems.map((_, i) =>
-    `<div class="hero-dot ${i===idx?'active':''}" onclick="renderHero(${i})"></div>`
+    `<div class="hero-dot ${i === idx ? 'active' : ''}" onclick="renderHero(${i})"></div>`
   ).join('');
 }
 
@@ -204,7 +204,7 @@ function createCard(item) {
   `;
 }
 
-function skeletonCards(n=8) {
+function skeletonCards(n = 8) {
   return Array(n).fill(0).map(() => `
     <div class="card-skeleton">
       <div class="skeleton img"></div>
@@ -296,14 +296,14 @@ async function showSection(section) {
   else if (section === 'anime') navLinks[3].classList.add('active');
 
   content.innerHTML = '';
-  
+
   if (heroTimer) clearInterval(heroTimer);
   heroItems = [];
   heroIdx = 0;
   document.getElementById('hero-bg').style.backgroundImage = 'none';
   document.getElementById('hero-content').innerHTML = '';
   document.getElementById('hero-dots').innerHTML = '';
-  
+
   const cats = section === 'anime' ? ANIME_CATEGORIES : CATEGORIES;
   cats.forEach(cat => content.appendChild(createRowEl(cat)));
 
@@ -345,9 +345,9 @@ async function showSection(section) {
 
 async function init() {
   setLoaderProgress(10);
-  
+
   await showSection('home');
-  
+
   setLoaderProgress(80);
 
   const ls = document.getElementById('loading-screen');
@@ -403,26 +403,26 @@ async function openModal(id, type) {
       <div class="ep-row">
         <span class="ep-label">Season</span>
         <select class="ep-select" id="modal-season" onchange="updateEpisode()">
-          ${Array.from({length:10},(_,i)=>`<option value="${i+1}">Season ${i+1}</option>`).join('')}
+          ${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}">Season ${i + 1}</option>`).join('')}
         </select>
       </div>
       <div class="ep-row">
         <span class="ep-label">Episode</span>
         <select class="ep-select" id="modal-episode" onchange="updateEpisode()">
-          ${Array.from({length:30},(_,i)=>`<option value="${i+1}">Episode ${i+1}</option>`).join('')}
+          ${Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}">Episode ${i + 1}</option>`).join('')}
         </select>
       </div>
     </div>
   ` : '';
 
-  const genresHTML = (item.genres||[]).map(g=>`<span class="modal-genre">${escHtml(g)}</span>`).join('');
+  const genresHTML = (item.genres || []).map(g => `<span class="modal-genre">${escHtml(g)}</span>`).join('');
 
   inner.innerHTML = `
     <div class="modal-hero">
       ${item.poster
-        ? `<img src="${item.poster}" alt="${escHtml(item.title)}" style="width:100%;height:100%;object-fit:cover">`
-        : `<div style="width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-dim)">No Image</div>`
-      }
+      ? `<img src="${item.poster}" alt="${escHtml(item.title)}" style="width:100%;height:100%;object-fit:cover">`
+      : `<div style="width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-dim)">No Image</div>`
+    }
     </div>
     <div class="modal-body">
       <div class="modal-meta">
@@ -456,7 +456,7 @@ async function loadModalRecs(item) {
   if (!section) return;
 
   section.innerHTML = `<div class="modal-recs-title">More Like This</div>
-    <div class="modal-recs">${Array(6).fill(0).map(()=>`
+    <div class="modal-recs">${Array(6).fill(0).map(() => `
       <div class="skeleton" style="aspect-ratio:2/3;border-radius:6px"></div>
     `).join('')}</div>`;
 
@@ -467,7 +467,7 @@ async function loadModalRecs(item) {
     return;
   }
 
-  const recsHTML = recs.filter(r=>r&&r.title).map(r => {
+  const recsHTML = recs.filter(r => r && r.title).map(r => {
     cacheItem(r);
     const imgContent = r.poster
       ? `<img src="${r.poster}" alt="${escHtml(r.title)}" loading="lazy" onerror="this.style.display='none'">`
@@ -524,7 +524,7 @@ window.addEventListener("message", function (event) {
         episode: data.episode
       }));
     }
-  } catch(e) {}
+  } catch (e) { }
 });
 
 function getPlayerURL(id, type, source, season, episode) {
@@ -534,10 +534,10 @@ function getPlayerURL(id, type, source, season, episode) {
     const saved = JSON.parse(localStorage.getItem(key));
     if (saved && saved.timestamp > 10) {
       if (type !== 'tv' || (saved.season == season && saved.episode == episode)) {
-         resumeParam = `&progress=${Math.floor(saved.timestamp)}`;
+        resumeParam = `&progress=${Math.floor(saved.timestamp)}`;
       }
     }
-  } catch(e) {}
+  } catch (e) { }
 
   if (source === 'vidking') {
     if (type === 'tv') return `https://www.vidking.net/embed/tv/${id}/${season}/${episode}`;
@@ -585,10 +585,10 @@ function playItem(id, type, season, episode) {
     tvCtrl.innerHTML = `
       <span class="player-source-label">Episode:</span>
       <select class="ep-select" id="player-season" onchange="playerChangedEp(${id},'${type}')">
-        ${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${i+1===season?'selected':''}>S${i+1}</option>`).join('')}
+        ${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${i + 1 === season ? 'selected' : ''}>S${i + 1}</option>`).join('')}
       </select>
       <select class="ep-select" id="player-ep" onchange="playerChangedEp(${id},'${type}')">
-        ${Array.from({length:30},(_,i)=>`<option value="${i+1}" ${i+1===episode?'selected':''}>E${i+1}</option>`).join('')}
+        ${Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}" ${i + 1 === episode ? 'selected' : ''}>E${i + 1}</option>`).join('')}
       </select>
     `;
   } else {
@@ -733,7 +733,7 @@ async function initFirebase() {
     if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
     firebaseDb = firebase.database();
     return true;
-  } catch(e) {
+  } catch (e) {
     updateCastStatus("Failed to init Firebase", true);
     return false;
   }
@@ -753,7 +753,7 @@ function handleCastOverlayClick(e) {
   if (e.target === document.getElementById('cast-overlay')) closeCastModal();
 }
 
-function updateCastStatus(msg, isError=false) {
+function updateCastStatus(msg, isError = false) {
   const el = document.getElementById('cast-status');
   el.textContent = msg;
   el.style.color = isError ? '#ef4444' : '#22c55e';
@@ -763,14 +763,14 @@ function updateCastStatus(msg, isError=false) {
 async function connectAsRemote() {
   const code = document.getElementById('room-code-input').value.trim().toUpperCase();
   if (!code) { updateCastStatus("Please enter a room code", true); return; }
-  
+
   updateCastStatus("Connecting to Firebase...");
   const ok = await initFirebase();
   if (!ok) return;
 
   currentRoomCode = code;
   currentCastMode = 'remote';
-  
+
   // Write a presence ping
   firebaseDb.ref(`rooms/${code}/presence/remote`).set({ connected: true, at: Date.now() });
 
@@ -782,32 +782,32 @@ async function connectAsRemote() {
 async function connectAsTV() {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   document.getElementById('room-code-input').value = code;
-  
+
   updateCastStatus("Connecting to Firebase...");
   const ok = await initFirebase();
   if (!ok) return;
 
   currentRoomCode = code;
   currentCastMode = 'tv';
-  
+
   // Listen for commands
   firebaseDb.ref(`rooms/${code}/command`).on('value', (snap) => {
     const cmd = snap.val();
     if (!cmd || !cmd.action) return;
     if (cmd.id === lastCommandId) return;
     lastCommandId = cmd.id;
-    
+
     if (cmd.action === 'play' && cmd.media) {
       showToast(`Received cast: ${cmd.media.title}`);
-      
+
       // Manually open the player with the received data
       document.getElementById('player-title').textContent = cmd.media.title;
       document.getElementById('player-ep-info').textContent = cmd.media.epInfo || '';
-      
+
       currentSource = cmd.media.source || 'videasy';
       document.getElementById('src-videasy').classList.toggle('active', currentSource === 'videasy');
       document.getElementById('src-vidking').classList.toggle('active', currentSource === 'vidking');
-      
+
       // Force autoplay on the received URL and hide embed overlay
       let finalUrl = cmd.media.url;
       finalUrl = finalUrl.replace('overlay=true', 'autoplay=true');
@@ -815,19 +815,19 @@ async function connectAsTV() {
         finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=true';
       }
       document.getElementById('player-iframe').src = finalUrl;
-      
+
       window._playState = cmd.media.state || null;
-      
+
       // Hide all UI controls so it's truly fullscreen TV mode
       document.getElementById('player-tv-controls').style.display = 'none';
       document.getElementById('player-source-bar').style.display = 'none';
       const topbar = document.querySelector('.player-topbar');
       if (topbar) topbar.style.display = 'none';
-      
+
       const overlay = document.getElementById('player-overlay');
       overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
-      
+
       // Attempt Auto-Fullscreen
       try {
         if (document.documentElement.requestFullscreen) {
@@ -857,14 +857,14 @@ async function connectAsTV() {
 
 async function sendCastCommand(media) {
   if (!firebaseDb || !currentRoomCode) return false;
-  
+
   const cmd = {
     action: "play",
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     sentAt: Date.now(),
     media: media
   };
-  
+
   await firebaseDb.ref(`rooms/${currentRoomCode}/command`).set(cmd);
   showToast("Casted to TV!");
   return true;
@@ -872,22 +872,22 @@ async function sendCastCommand(media) {
 
 // ── OVERRIDE PLAY ITEM TO INTERCEPT CASTS ─────────────────────────────────
 const originalPlayItem = playItem;
-playItem = async function(id, type, season, episode) {
+playItem = async function (id, type, season, episode) {
   // If we are connected as a remote, we cast instead of playing locally!
   if (currentCastMode === 'remote' && currentRoomCode) {
     const item = getCached(type, id);
     const title = item ? item.title : 'Playing…';
-    
+
     season = season || currentSeason || 1;
     episode = episode || currentEpisode || 1;
-    
+
     let epInfo = '';
     if (type === 'tv' || (type === 'anime' && !item?.isMovie)) {
       epInfo = `Season ${season}, Episode ${episode}`;
     }
-    
+
     const url = getPlayerURL(id, type, 'videasy', season, episode);
-    
+
     await sendCastCommand({
       title: title,
       epInfo: epInfo,
@@ -897,7 +897,7 @@ playItem = async function(id, type, season, episode) {
     });
     return; // Stop here, don't open local player!
   }
-  
+
   // Otherwise, play normally on this device
   originalPlayItem(id, type, season, episode);
 };
