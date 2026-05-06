@@ -1124,8 +1124,10 @@ function tvSpatialNavigate(key) {
   const cx  = cur.left + cur.width  / 2;
   const cy  = cur.top  + cur.height / 2;
 
-  // Row-lock tolerance for Left/Right: elements must be in same horizontal band
-  // Use a generous min so navbar items (short height) still work
+  // Document-relative Y for current element (unaffected by scroll)
+  const curPageY = cur.top + window.scrollY;
+
+  // Row-lock tolerance for Left/Right
   const rowTolerance = Math.max(cur.height * 0.75, 50);
 
   let best      = null;
@@ -1136,22 +1138,40 @@ function tvSpatialNavigate(key) {
     const r  = el.getBoundingClientRect();
     const ex = r.left + r.width  / 2;
     const ey = r.top  + r.height / 2;
+
+    // For Up/Down: use page-relative Y so off-viewport cards beat the fixed navbar.
+    // Fixed elements always stay at the same viewport Y regardless of scroll,
+    // so adding scrollY inflates their "document Y" incorrectly — we detect and skip them.
+    const isFixed = (function(node) {
+      while (node && node !== document.body) {
+        if (window.getComputedStyle(node).position === 'fixed') return true;
+        node = node.parentElement;
+      }
+      return false;
+    })(el);
+
     const dx = ex - cx;
-    const dy = ey - cy;
+    // For horizontal: use viewport dy (left/right within same visible row)
+    // For vertical: use document dy so scrolled-off cards are correctly ranked
+    const viewDy   = ey  - cy;
+    const pageDy   = (ey + window.scrollY) - curPageY;
+
     let primary, secondary;
 
     if (key === 'right') {
-      if (dx <= 0 || Math.abs(dy) > rowTolerance) continue;
-      primary = dx; secondary = Math.abs(dy);
+      if (dx <= 0 || Math.abs(viewDy) > rowTolerance) continue;
+      primary = dx; secondary = Math.abs(viewDy);
     } else if (key === 'left') {
-      if (dx >= 0 || Math.abs(dy) > rowTolerance) continue;
-      primary = -dx; secondary = Math.abs(dy);
+      if (dx >= 0 || Math.abs(viewDy) > rowTolerance) continue;
+      primary = -dx; secondary = Math.abs(viewDy);
     } else if (key === 'down') {
-      if (dy <= 0) continue;
-      primary = dy; secondary = Math.abs(dx);
+      if (isFixed) continue;           // skip fixed navbar
+      if (pageDy <= 0) continue;
+      primary = pageDy; secondary = Math.abs(dx);
     } else if (key === 'up') {
-      if (dy >= 0) continue;
-      primary = -dy; secondary = Math.abs(dx);
+      if (isFixed) continue;           // skip fixed navbar
+      if (pageDy >= 0) continue;
+      primary = -pageDy; secondary = Math.abs(dx);
     }
     if (primary === undefined) continue;
 
@@ -1159,7 +1179,7 @@ function tvSpatialNavigate(key) {
     if (score < bestScore) { bestScore = score; best = el; }
   }
 
-  // Nothing found in that direction → stay put (true edge clamping)
+  // Nothing found → stay put (clamp at edge)
   if (best) tvSetFocus(best);
 }
 
