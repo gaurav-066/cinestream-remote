@@ -20,3 +20,4 @@
 - End-to-end testing: Open the site on two different devices (e.g. Phone and PC/TV). Generate a code on one, enter it on the other. Try to play a movie from the remote!
 
 
+we need to like make a cursor fxn as soon as we press play now then we have a cursor remote through which we could navigate and cursor remote is fast to reach.

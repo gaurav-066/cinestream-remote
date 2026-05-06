@@ -438,8 +438,8 @@ async function openModal(id, type) {
 
   inner.innerHTML = `
     <div class="modal-hero">
-      ${item.poster
-      ? `<img src="${item.poster}" alt="${escHtml(item.title)}" style="width:100%;height:100%;object-fit:cover">`
+      ${(item.backdrop || item.poster)
+      ? `<img src="${item.backdrop || item.poster}" alt="${escHtml(item.title)}" style="width:100%;height:100%;object-fit:cover">`
       : `<div style="width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-dim)">No Image</div>`
     }
     </div>
