@@ -450,6 +450,8 @@ async function openModal(id, type) {
 
   // Load recommendations async
   loadModalRecs(item);
+  // Auto-focus Play button on TV
+  if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 100);
 }
 
 async function loadModalRecs(item) {
@@ -506,6 +508,7 @@ function closeModal(fromPopState = false) {
   document.getElementById('modal-overlay').classList.remove('open');
   document.body.style.overflow = '';
   currentItem = null;
+  if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 100); // restore home focus
 }
 
 function handleModalOverlayClick(e) {
@@ -609,6 +612,7 @@ function playItem(id, type, season, episode) {
   pushOverlayState();
   document.getElementById('player-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 150); // auto-focus player controls
 }
 
 function playerChangedEp(id, type) {
@@ -644,6 +648,7 @@ function closePlayer(fromPopState = false) {
   document.getElementById('player-iframe').src = '';
   document.body.style.overflow = '';
   window._playState = null;
+  if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 100); // restore modal or home focus
 }
 
 function exitTVMode() {
@@ -1006,27 +1011,54 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }
 });
 
-// ── TV SPATIAL NAVIGATION ──────────────────────────────────────────────────
-let tvFocusedEl = null;
+// ── TV SPATIAL NAVIGATION v3 ──────────────────────────────────────────────
+let tvFocusedEl        = null;
+let tvFocusBeforeModal = null; // remember card that opened modal
+
+// Context-specific selector sets — navigation is LOCKED to the active context
+const TV_CONTEXTS = {
+  player: [
+    '#player-overlay .source-btn',
+    '#player-overlay .player-close',
+    '#tv-exit-btn'
+  ],
+  modal: [
+    '#modal-overlay .modal-play',
+    '#modal-overlay .modal-close',
+    '#modal-overlay .btn-info',
+    '#modal-overlay .ep-select',
+    '#modal-overlay .rec-card'
+  ],
+  home: [
+    '.nav-links a',
+    '.nav-search-btn',
+    '.btn-play',
+    '.btn-info',
+    '.card'
+  ]
+};
+
+function tvGetContext() {
+  if (document.getElementById('player-overlay').classList.contains('open')) return 'player';
+  if (document.getElementById('modal-overlay').classList.contains('open'))  return 'modal';
+  return 'home';
+}
+
+function tvIsVisible(el) {
+  let node = el;
+  while (node && node !== document.body) {
+    const s = window.getComputedStyle(node);
+    if (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) === 0) return false;
+    node = node.parentElement;
+  }
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0;
+}
 
 function tvGetFocusables() {
-  const selectors = [
-    '.nav-links a', '.nav-search-btn', '.btn-play', '.btn-info',
-    '.card', '.modal-play', '.source-btn', '.ep-select',
-    '.rec-card', '.modal-close', '.player-close', '#tv-exit-btn'
-  ].join(',');
-
-  return Array.from(document.querySelectorAll(selectors)).filter(el => {
-    // Check visibility via computed style (works even inside overflow:hidden scrollers)
-    let node = el;
-    while (node && node !== document.body) {
-      const s = window.getComputedStyle(node);
-      if (s.display === 'none' || s.visibility === 'hidden') return false;
-      node = node.parentElement;
-    }
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
-  });
+  const ctx      = tvGetContext();
+  const selector = TV_CONTEXTS[ctx].join(',');
+  return Array.from(document.querySelectorAll(selector)).filter(tvIsVisible);
 }
 
 function tvSetFocus(el) {
@@ -1037,6 +1069,44 @@ function tvSetFocus(el) {
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
 
+// Call this whenever context changes (modal open/close, player open/close)
+function tvSyncFocus() {
+  const ctx       = tvGetContext();
+  const focusables = tvGetFocusables();
+  if (!focusables.length) return;
+
+  if (ctx === 'modal') {
+    // Save where we were on the home screen
+    tvFocusBeforeModal = tvFocusedEl;
+    // Auto-land on the Play button
+    const play = document.querySelector('#modal-overlay .modal-play');
+    tvSetFocus(play && tvIsVisible(play) ? play : focusables[0]);
+
+  } else if (ctx === 'player') {
+    const tvMode = document.getElementById('player-overlay').classList.contains('tv-mode');
+    if (tvMode) {
+      // Full-screen TV cast: only exit button matters
+      const exit = document.getElementById('tv-exit-btn');
+      tvSetFocus(exit && tvIsVisible(exit) ? exit : focusables[0]);
+    } else {
+      // Normal player: land on close button
+      const close = document.querySelector('#player-overlay .player-close');
+      tvSetFocus(close && tvIsVisible(close) ? close : focusables[0]);
+    }
+
+  } else {
+    // Back to home — restore focus to the card that opened the modal
+    if (tvFocusBeforeModal && document.body.contains(tvFocusBeforeModal)) {
+      tvSetFocus(tvFocusBeforeModal);
+    } else {
+      // Default: first card
+      const firstCard = document.querySelector('.card');
+      tvSetFocus(firstCard && tvIsVisible(firstCard) ? firstCard : focusables[0]);
+    }
+    tvFocusBeforeModal = null;
+  }
+}
+
 function tvSpatialNavigate(key) {
   if (key === 'enter') { if (tvFocusedEl) tvFocusedEl.click(); return; }
   if (key === 'back')  { history.back(); return; }
@@ -1044,21 +1114,21 @@ function tvSpatialNavigate(key) {
   const all = tvGetFocusables();
   if (!all.length) return;
 
-  // Nothing focused yet → pick first visible element
+  // If nothing focused (or focused el left context), sync first
   if (!tvFocusedEl || !all.includes(tvFocusedEl)) {
-    tvSetFocus(all[0]);
+    tvSyncFocus();
     return;
   }
 
-  const cur  = tvFocusedEl.getBoundingClientRect();
-  const cx   = cur.left + cur.width  / 2;
-  const cy   = cur.top  + cur.height / 2;
+  const cur = tvFocusedEl.getBoundingClientRect();
+  const cx  = cur.left + cur.width  / 2;
+  const cy  = cur.top  + cur.height / 2;
 
-  // For left/right: only look in the same horizontal band (±70% of current height)
-  // This prevents jumping to another row when at the end of a row
-  const rowTolerance = cur.height * 0.7;
+  // Row-lock tolerance for Left/Right: elements must be in same horizontal band
+  // Use a generous min so navbar items (short height) still work
+  const rowTolerance = Math.max(cur.height * 0.75, 50);
 
-  let best = null;
+  let best      = null;
   let bestScore = Infinity;
 
   for (const el of all) {
@@ -1068,17 +1138,13 @@ function tvSpatialNavigate(key) {
     const ey = r.top  + r.height / 2;
     const dx = ex - cx;
     const dy = ey - cy;
-
     let primary, secondary;
 
     if (key === 'right') {
-      // Must be to the right AND in the same row band
-      if (dx <= 0) continue;
-      if (Math.abs(dy) > rowTolerance) continue;
+      if (dx <= 0 || Math.abs(dy) > rowTolerance) continue;
       primary = dx; secondary = Math.abs(dy);
     } else if (key === 'left') {
-      if (dx >= 0) continue;
-      if (Math.abs(dy) > rowTolerance) continue;
+      if (dx >= 0 || Math.abs(dy) > rowTolerance) continue;
       primary = -dx; secondary = Math.abs(dy);
     } else if (key === 'down') {
       if (dy <= 0) continue;
@@ -1087,15 +1153,13 @@ function tvSpatialNavigate(key) {
       if (dy >= 0) continue;
       primary = -dy; secondary = Math.abs(dx);
     }
-
     if (primary === undefined) continue;
 
-    // Penalize off-axis drift so we stay aligned
     const score = primary + secondary * 2.5;
     if (score < bestScore) { bestScore = score; best = el; }
   }
 
-  // If nothing found in this direction → stay put (clamp at edge)
+  // Nothing found in that direction → stay put (true edge clamping)
   if (best) tvSetFocus(best);
 }
 
