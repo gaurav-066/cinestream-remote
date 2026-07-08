@@ -1,6 +1,6 @@
 # Development Log
 
-## Current Session (Auto-Fullscreen for Source 1)
+## Current Session (Auto-Fullscreen & Player Sizing for Source 1 & 2)
 
 **What was built:**
 - **Automatic Fullscreen Integration**:
@@ -8,6 +8,8 @@
     - Integrated `enterFullscreen` into `playItem` (local playback start) and `switchSource` when Videasy (Source 1) is selected.
     - Integrated `enterFullscreen` within the `window` message listener so that when a user clicks the play button inside the Videasy iframe (firing a progress update), the player goes fullscreen automatically.
     - Implemented automatic exit of browser-level fullscreen in `closePlayer` when closing the player overlay.
+- **Player Sizing Adjustment**:
+    - Increased player overlay elements (`.player-topbar`, `.player-frame-wrap`, `.player-source-bar`, and `.player-tv-controls`) max-width from `1200px` to `1400px` in `style.css` to make the video player window larger and more immersive on desktop screens.
 
 **What was tested:**
 - Code structures and logic flow.

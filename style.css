@@ -576,7 +576,7 @@ img{display:block}
 }
 #player-overlay.open{opacity:1;pointer-events:all}
 .player-topbar{
-  width:100%;max-width:1200px;
+  width:100%;max-width:1400px;
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:16px;
   padding:0 4px;
@@ -603,7 +603,7 @@ img{display:block}
 .player-close:hover{color:var(--white);background:var(--accent)}
 .player-close svg{width:18px;height:18px}
 .player-frame-wrap{
-  width:100%;max-width:1200px;
+  width:100%;max-width:1400px;
   aspect-ratio:16/9;
   background:#000;
   border-radius:10px;overflow:hidden;
@@ -655,7 +655,7 @@ img{display:block}
 
 
 .player-source-bar{
-  width:100%;max-width:1200px;
+  width:100%;max-width:1400px;
   display:flex;align-items:center;gap:8px;
   margin-top:12px;flex-wrap:wrap;
 }
@@ -679,7 +679,7 @@ img{display:block}
 .source-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
 .player-tv-controls{
   display:none;align-items:center;gap:12px;
-  width:100%;max-width:1200px;margin-top:16px;
+  width:100%;max-width:1400px;margin-top:16px;
   background:rgba(255,255,255,0.05);padding:16px;
   border-radius:8px;border:1px solid var(--border);
 }
