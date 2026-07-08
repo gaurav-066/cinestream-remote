@@ -579,6 +579,19 @@ function handleModalOverlayClick(e) {
 
 // ── PLAYER ────────────────────────────────────────────────────────────────
 
+function enterFullscreen() {
+  try {
+    const docEl = document.documentElement;
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+      if (docEl.requestFullscreen) docEl.requestFullscreen();
+      else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+      else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+    }
+  } catch (e) {
+    console.warn("Fullscreen request failed", e);
+  }
+}
+
 window.addEventListener("message", function (event) {
   try {
     const data = JSON.parse(event.data);
@@ -590,6 +603,8 @@ window.addEventListener("message", function (event) {
         season: data.season,
         episode: data.episode
       }));
+      // Auto-fullscreen when playback starts/progresses on Videasy
+      enterFullscreen();
     }
   } catch (e) { }
 });
@@ -685,6 +700,12 @@ function playItem(id, type, season, episode) {
   pushOverlayState();
   document.getElementById('player-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Auto-fullscreen when starting Source 1 locally
+  if (currentCastMode !== 'remote' && currentSource === 'videasy') {
+    enterFullscreen();
+  }
+
   if (currentCastMode === 'tv') {
     setTimeout(tvSyncFocus, 150);
   }
@@ -730,6 +751,11 @@ function switchSource(source) {
 
   const url = getPlayerURL(state.id, state.type, source, state.season, state.episode);
   document.getElementById('player-iframe').src = url;
+
+  // Auto-fullscreen when switching to Source 1
+  if (source === 'videasy') {
+    enterFullscreen();
+  }
 }
 
 function closePlayer(fromPopState = false) {
@@ -740,6 +766,16 @@ function closePlayer(fromPopState = false) {
   document.getElementById('player-iframe').src = '';
   document.body.style.overflow = '';
   window._playState = null;
+
+  // Exit fullscreen if active
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+  } catch (e) { }
+
   if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 100); // restore modal or home focus
 }
 

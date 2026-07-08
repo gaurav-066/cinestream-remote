@@ -1,6 +1,24 @@
 # Development Log
 
-## Current Session (Casting & TV Navigation)
+## Current Session (Auto-Fullscreen for Source 1)
+
+**What was built:**
+- **Automatic Fullscreen Integration**:
+    - Implemented `enterFullscreen` helper to request browser-level fullscreen on `document.documentElement`.
+    - Integrated `enterFullscreen` into `playItem` (local playback start) and `switchSource` when Videasy (Source 1) is selected.
+    - Integrated `enterFullscreen` within the `window` message listener so that when a user clicks the play button inside the Videasy iframe (firing a progress update), the player goes fullscreen automatically.
+    - Implemented automatic exit of browser-level fullscreen in `closePlayer` when closing the player overlay.
+
+**What was tested:**
+- Code structures and logic flow.
+
+**What passed:**
+- Logic successfully implemented without syntax errors. Fullscreen enters on playback/play and exits on close.
+
+**What's next:**
+- Gather user feedback on the fullscreen behavior.
+
+## Session 2026-07-08 (Casting & TV Navigation)
 
 **What was built:**
 - **Spatial Navigation Engine v3**: Context-aware navigation that locks focus to Home, Modal, or Player.
