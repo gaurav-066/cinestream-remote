@@ -579,17 +579,100 @@ function handleModalOverlayClick(e) {
 
 // ── PLAYER ────────────────────────────────────────────────────────────────
 
-function enterFullscreen() {
+let playerInactivityTimer = null;
+
+function resetPlayerInactivityTimer() {
+  const overlay = document.getElementById('player-overlay');
+  if (!overlay || !overlay.classList.contains('web-fullscreen')) return;
+
+  // Show controls
+  overlay.classList.remove('controls-hidden');
+
+  // Reset timer
+  clearTimeout(playerInactivityTimer);
+  playerInactivityTimer = setTimeout(() => {
+    if (overlay.classList.contains('web-fullscreen') && overlay.classList.contains('open')) {
+      overlay.classList.add('controls-hidden');
+    }
+  }, 3000);
+}
+
+function enterPlayerFullscreen() {
+  const overlay = document.getElementById('player-overlay');
+  if (!overlay) return;
+  overlay.classList.add('web-fullscreen');
+  
+  resetPlayerInactivityTimer();
+
   try {
-    const docEl = document.documentElement;
     if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-      if (docEl.requestFullscreen) docEl.requestFullscreen();
-      else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
-      else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+      if (overlay.requestFullscreen) overlay.requestFullscreen();
+      else if (overlay.webkitRequestFullscreen) overlay.webkitRequestFullscreen();
+      else if (overlay.msRequestFullscreen) overlay.msRequestFullscreen();
     }
   } catch (e) {
-    console.warn("Fullscreen request failed", e);
+    console.warn("Native fullscreen request failed, using web fallback:", e);
   }
+}
+
+function exitPlayerFullscreen() {
+  const overlay = document.getElementById('player-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('web-fullscreen');
+  overlay.classList.remove('controls-hidden');
+  clearTimeout(playerInactivityTimer);
+
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+  } catch (e) { }
+}
+
+function togglePlayerFullscreen() {
+  const overlay = document.getElementById('player-overlay');
+  if (overlay && overlay.classList.contains('web-fullscreen')) {
+    exitPlayerFullscreen();
+  } else {
+    enterPlayerFullscreen();
+  }
+}
+
+function enterFullscreen() {
+  enterPlayerFullscreen();
+}
+
+function handleFullscreenChange() {
+  const isNative = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  const overlay = document.getElementById('player-overlay');
+  if (!isNative && overlay && overlay.classList.contains('web-fullscreen')) {
+    overlay.classList.remove('web-fullscreen');
+    overlay.classList.remove('controls-hidden');
+    clearTimeout(playerInactivityTimer);
+  }
+}
+
+function initPlayerInactivityListeners() {
+  const overlay = document.getElementById('player-overlay');
+  if (overlay) {
+    overlay.addEventListener('mousemove', resetPlayerInactivityTimer);
+    overlay.addEventListener('touchstart', resetPlayerInactivityTimer, { passive: true });
+    overlay.addEventListener('click', resetPlayerInactivityTimer);
+    overlay.addEventListener('keydown', resetPlayerInactivityTimer);
+  }
+  
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+  document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPlayerInactivityListeners);
+} else {
+  initPlayerInactivityListeners();
 }
 
 window.addEventListener("message", function (event) {
@@ -767,14 +850,8 @@ function closePlayer(fromPopState = false) {
   document.body.style.overflow = '';
   window._playState = null;
 
-  // Exit fullscreen if active
-  try {
-    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      else if (document.msExitFullscreen) document.msExitFullscreen();
-    }
-  } catch (e) { }
+  // Exit fullscreen and cleanup
+  exitPlayerFullscreen();
 
   if (currentCastMode === 'tv') setTimeout(tvSyncFocus, 100); // restore modal or home focus
 }
@@ -782,12 +859,8 @@ function closePlayer(fromPopState = false) {
 function exitTVMode() {
   closePlayer();
   
-  // Exit full screen browser mode
-  try {
-    if (document.exitFullscreen) document.exitFullscreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-    else if (document.msExitFullscreen) document.msExitFullscreen();
-  } catch(e) {}
+  // Exit fullscreen and cleanup
+  exitPlayerFullscreen();
   
   // Clean up firebase room if we were the TV
   if (currentCastMode === 'tv' && currentRoomCode && firebaseDb) {
@@ -1144,6 +1217,7 @@ let tvFocusBeforeModal = null; // remember card that opened modal
 const TV_CONTEXTS = {
   player: [
     '#player-overlay .source-btn',
+    '#player-overlay .player-fullscreen-btn',
     '#player-overlay .player-close'
   ],
   modal: [

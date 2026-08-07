@@ -1,24 +1,22 @@
 # Development Log
 
-## Current Session (Auto-Fullscreen & Player Sizing for Source 1 & 2)
+## Current Session (Viewport Fullscreen Fallback & Auto-Hide Controls)
 
 **What was built:**
-- **Automatic Fullscreen Integration**:
-    - Implemented `enterFullscreen` helper to request browser-level fullscreen on `document.documentElement`.
-    - Integrated `enterFullscreen` into `playItem` (local playback start) and `switchSource` when Videasy (Source 1) is selected.
-    - Integrated `enterFullscreen` within the `window` message listener so that when a user clicks the play button inside the Videasy iframe (firing a progress update), the player goes fullscreen automatically.
-    - Implemented automatic exit of browser-level fullscreen in `closePlayer` when closing the player overlay.
-- **Player Sizing Adjustment**:
-    - Increased player overlay elements (`.player-topbar`, `.player-frame-wrap`, `.player-source-bar`, and `.player-tv-controls`) max-width from `1200px` to `1400px` in `style.css` to make the video player window larger and more immersive on desktop screens.
+- **Viewport-level Web Fullscreen (Fallback & Theater Mode)**: Added a custom `.web-fullscreen` layout styling to `#player-overlay` that scales the iframe container to `100vw` and `100vh` without margins or padding, acting as a robust fallback when native browser-level fullscreen requests are blocked/unsupported (e.g. on Smart Boards/TVs).
+- **Controls Auto-Hide Timer**: Implemented a 3-second inactivity tracker inside the player overlay. If no mouse movement, touch interaction, click, or keyboard input is detected for 3 seconds, the UI controls (top bar, source bar, and TV controls) smoothly fade out. They reappear instantly upon user interaction.
+- **Dedicated Fullscreen Toggle Button**: Added a `.player-fullscreen-btn` to the player overlay's top bar next to the Close button, mapped to toggle browser and web viewport fullscreen.
+- **Native Fullscreen Synchronization**: Wired event listeners for browser `fullscreenchange` and prefix variants to automatically exit the web fullscreen fallback layout when the user exits native fullscreen using external browser controls (like pressing `ESC`).
+- **TV Spatial Navigation Integration**: Included the new fullscreen toggle button in `TV_CONTEXTS.player` for TV remote compatibility.
 
 **What was tested:**
-- Code structures and logic flow.
+- HTML modifications, CSS rules, and JavaScript logic structure.
 
 **What passed:**
-- Logic successfully implemented without syntax errors. Fullscreen enters on playback/play and exits on close.
+- Successfully integrated custom web-fullscreen alongside native fullscreen without syntax errors or event conflicts.
 
 **What's next:**
-- Gather user feedback on the fullscreen behavior.
+- Request user verification of fullscreen behavior and controls fade-out on the Smart Board.
 
 ## Session 2026-07-08 (Casting & TV Navigation)
 
